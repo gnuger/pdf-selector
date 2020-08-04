@@ -11,12 +11,17 @@ import org.gnuger.pdf.selector.PDFSelectorStripper.Position
 
 object Demo {
   def highlight(filename: String, startPlaceHolder: String, endPlaceHolder: String, outputFilename: String) = {
+
+
+
     val pdfDocument = PDDocument.load(new File(filename))
     val pdfTextStripper = PDFSelectorStripper(startPlaceHolder.r, endPlaceHolder.r)
     pdfTextStripper.setSortByPosition(true)
     val highlight = pdfTextStripper.getTextBySelector(pdfDocument)
 
     highlight.positions.foreach(drawRect(pdfDocument, _))
+
+    println(highlight.text)
 
     pdfDocument.save(new File(outputFilename))
     pdfDocument.close()
@@ -43,25 +48,26 @@ object Demo {
   }
 
   def main(args: Array[String]): Unit = {
-    /*highlight(
-      "/Users/anant.khaitan/Documents/avalara_tax_docs/updated_in_sales_and_use_taxes_accommodations_and_linens.pdf",
-      "Application\\. – This section",
-      "Expiration\\. –",
-      "/Users/anant.khaitan/Desktop/output.pdf"
-    )*/
 
     /*highlight(
-      "/Users/anant.khaitan/Documents/avalara_tax_docs/CityOfHornLake.pdf",
-      "occupancy tax is levied",
-      "Taxpayer Access Point",
-      "/Users/anant.khaitan/Desktop/output.pdf"
+      "/Users/anant.khaitan/Desktop/Demo/MI/72-18-28 Horn Lake Occupancy Extended Repeal Date.pdf",
+      "For purposes of this levy",
+      "such",
+      "/Users/anant.khaitan/Desktop/output1.pdf"
+    )
+
+    highlight(
+      "/Users/anant.khaitan/Desktop/Demo/MI/sales_notice720807natcheztax.pdf",
+      "For purposes of this levy",
+      "such",
+      "/Users/anant.khaitan/Desktop/output2.pdf"
     )*/
 
     highlight(
-      "/Users/anant.khaitan/Documents/avalara_tax_docs/vermont.pdf",
-      "Selling Merchandise",
-      "Additional Information",
-      "/Users/anant.khaitan/Desktop/output.pdf"
+      "/Users/anant.khaitan/Desktop/Demo/vermont.pdf",
+      "If you sell merchandise",
+      "performed by service employees",
+      "/Users/anant.khaitan/Desktop/output_ve.pdf"
     )
   }
 

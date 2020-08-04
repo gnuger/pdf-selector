@@ -48,7 +48,7 @@ case class PDFSelectorStripper(startPlaceholder: Regex, endPlaceholder: Regex) e
           }
         }
       }
-      case 2 =>
+      case _ =>
     }
   }
 
@@ -87,9 +87,12 @@ case class PDFSelectorStripper(startPlaceholder: Regex, endPlaceholder: Regex) e
   }
 
   override def writePageEnd(): Unit = {
-    val boundingRect = Rect.boundaryRect(rects.toSeq)
-    val position = Position(boundingRect, getCurrentPageNo, rects.toSeq)
-    positions.addOne(position)
+    if (state != 3) {
+      val boundingRect = Rect.boundaryRect(rects.toSeq)
+      val position = Position(boundingRect, getCurrentPageNo, rects.toSeq)
+      positions.addOne(position)
+      if (state == 2) state = 3
+    }
     super.writePageEnd()
   }
 }
