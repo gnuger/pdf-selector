@@ -5,14 +5,16 @@ import java.util
 
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.{PDFTextStripper, TextPosition}
+import org.gnuger.pdf.selector.PDFSelectorStripper._
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
-case class PDFSelectorStripper(startPlaceholder: Regex, endPlaceholder: Regex) extends PDFTextStripper {
+case class PDFSelectorStripper(selector: Selector) extends PDFTextStripper {
 
-  import PDFSelectorStripper._
+  val startPlaceholder: Regex = selector.start.r
+  val endPlaceholder: Regex = selector.`end`.r
 
   var rects = mutable.ListBuffer.empty[Rect]
   var state = 0
@@ -114,6 +116,8 @@ object PDFSelectorStripper {
       Rect(x1, y1, x2, y2, x2 - x1, y2 - y1)
     }
   }
+
+  case class Selector(start: String, end: String)
 
 }
 

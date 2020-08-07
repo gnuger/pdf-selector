@@ -7,15 +7,12 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState
 import org.apache.pdfbox.pdmodel.{PDDocument, PDPageContentStream}
 import org.gnuger.pdf.selector.PDFSelectorStripper
-import org.gnuger.pdf.selector.PDFSelectorStripper.Position
+import org.gnuger.pdf.selector.PDFSelectorStripper.{Position, Selector}
 
 object Demo {
   def highlight(filename: String, startPlaceHolder: String, endPlaceHolder: String, outputFilename: String) = {
-
-
-
     val pdfDocument = PDDocument.load(new File(filename))
-    val pdfTextStripper = PDFSelectorStripper(startPlaceHolder.r, endPlaceHolder.r)
+    val pdfTextStripper = PDFSelectorStripper(Selector(startPlaceHolder, endPlaceHolder))
     pdfTextStripper.setSortByPosition(true)
     val highlight = pdfTextStripper.getTextBySelector(pdfDocument)
 
@@ -49,7 +46,7 @@ object Demo {
 
   def main(args: Array[String]): Unit = {
 
-    /*highlight(
+    highlight(
       "/Users/anant.khaitan/Desktop/Demo/MI/72-18-28 Horn Lake Occupancy Extended Repeal Date.pdf",
       "For purposes of this levy",
       "such",
@@ -61,14 +58,21 @@ object Demo {
       "For purposes of this levy",
       "such",
       "/Users/anant.khaitan/Desktop/output2.pdf"
-    )*/
+    )
 
-    highlight(
+    /*highlight(
       "/Users/anant.khaitan/Desktop/Demo/vermont.pdf",
       "If you sell merchandise",
       "performed by service employees",
       "/Users/anant.khaitan/Desktop/output_ve.pdf"
-    )
+    )*/
+
+    /*highlight(
+      "/Users/anant.khaitan/Desktop/Demo/LodgingFlyer_20_Q1.pdf",
+      "Convention and trade",
+      "on the number of lodging units",
+      "/Users/anant.khaitan/Desktop/output_wa.pdf"
+    )*/
   }
 
 }

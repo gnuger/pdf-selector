@@ -11,7 +11,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import org.gnuger.pdf.selector.PDFSelectorStripper
-import org.gnuger.pdf.selector.PDFSelectorStripper.{Highlight, Position, Rect}
+import org.gnuger.pdf.selector.PDFSelectorStripper.{Highlight, Position, Rect, Selector}
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.ExecutionContext
@@ -56,10 +56,14 @@ trait PDFRoutes extends Directives with JsonSupport {
 
   val fulltextRoute = (path("fulltext") & extractLog) { log =>
     entity(as[Multipart.FormData]) { formData =>
-      val extractOperation = formDataToPDDocument(formData, "file").map(document => {
+      val extractOperation = formDataToInputStream(formData, "file").map(inputStream => {
+        log.info(s"Extracting Full Text from PDF")
         val pdfTextStripper = new PDFTextStripper()
         pdfTextStripper.setSortByPosition(true)
-        pdfTextStripper.getText(document)
+        val document = PDDocument.load(inputStream)
+        val text = pdfTextStripper.getText(document)
+        document.close()
+        text
       })
 
       onComplete(extractOperation) {
@@ -72,11 +76,15 @@ trait PDFRoutes extends Directives with JsonSupport {
   val highlightRoute = (path("select") & extractLog) { log =>
     parameters('start, 'end) { (startPlaceHolder, endPlaceHolder) =>
       entity(as[Multipart.FormData]) { formData =>
-        val extractOperation = formDataToPDDocument(formData, "file").map(document => {
-          val pdfSelectorStripper = PDFSelectorStripper(startPlaceHolder.r, endPlaceHolder.r)
+        val extractOperation = formDataToInputStream(formData, "file").map(inputStream => {
+          val pdfSelectorStripper = PDFSelectorStripper(Selector(startPlaceHolder, endPlaceHolder))
           log.info(s"Extracting section from PDF between [$startPlaceHolder] and [$endPlaceHolder]")
           pdfSelectorStripper.setSortByPosition(true)
-          pdfSelectorStripper.getTextBySelector(document)
+
+          val document = PDDocument.load(inputStream)
+          val highlight = pdfSelectorStripper.getTextBySelector(document)
+          document.close()
+          highlight
         })
 
         onComplete(extractOperation) {
@@ -87,11 +95,10 @@ trait PDFRoutes extends Directives with JsonSupport {
     }
   }
 
-  def formDataToPDDocument(formData: Multipart.FormData, fieldName: String)(implicit mat: Materializer) = formData
+  def formDataToInputStream(formData: Multipart.FormData, fieldName: String)(implicit mat: Materializer) = formData
     .parts
     .filter(_.name == fieldName)
     .map(_.entity.dataBytes.runWith(StreamConverters.asInputStream(1 minute)))
-    .map(PDDocument.load(_))
     .runWith(Sink.head)
 }
 
