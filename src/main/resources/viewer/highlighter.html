@@ -1,28 +1,25 @@
 <html>
 <head>
-    <title>Marker</title>
+    <title>Highlighter</title>
     <script src="./node_modules/pdfjs-dist/build/pdf.js"></script>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<h1>Marker</h1>
+<h1>Highlighter</h1>
 <div id="outer-container">
     <div id="sidebar">
-        <form id="mark">
+        <form id="highlight">
             <p>
-                <input type="file" id="file" name="file">
+                <label>PDF File : </label>
+                <input type="file" id="pdf-file" name="pdf-file">
             </p>
-
             <p>
-                <input type="text" id="start" name="start" placeholder="Starting Anchor Text">
-                <input type="text" id="end" name="end" placeholder="Ending Anchor Text">
+                <label>Selector Config File : </label>
+                <input type="file" id="config-file" name="config-file">
             </p>
-
             <p>
-                <input type="submit" value="Mark">
+                <input type="submit" value="Highlight">
             </p>
-
-            <p id="download"></p>
 
             <p id="preview"></p>
         </form>
@@ -36,6 +33,6 @@
 
 
 </body>
-<script src="marker.js"></script>
+<script src="highlighter.js"></script>
 
 </html>

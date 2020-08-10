@@ -6,6 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives
+import akka.http.scaladsl.server.directives.FormFieldDirectives.FieldMagnet.apply
 import akka.stream.scaladsl.{Sink, StreamConverters}
 import akka.stream.{ActorMaterializer, Materializer}
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -16,9 +17,10 @@ import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.io.StdIn
+import scala.io.{Source, StdIn}
 import scala.language.postfixOps
 import scala.util.{Failure, Success}
+import spray.json._
 
 object WebServer extends PDFRoutes with SwaggerRoutes {
   implicit val system = ActorSystem("my-system")
@@ -33,7 +35,7 @@ object WebServer extends PDFRoutes with SwaggerRoutes {
       }
 
 
-    val bindingFuture = Http().bindAndHandle(fulltextRoute ~ highlightRoute ~ swaggerRoute ~ route, "localhost", 8080)
+    val bindingFuture = Http().bindAndHandle(fulltextRoute ~ highlightRoute ~ highlightRoute2 ~ swaggerRoute ~ route, "localhost", 8080)
     println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
@@ -48,6 +50,8 @@ trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val rectFormat = jsonFormat6(Rect.apply)
   implicit val positionFormat = jsonFormat3(Position.apply)
   implicit val highlightFormat = jsonFormat2(Highlight.apply)
+
+  implicit val selectorFormat = jsonFormat2(Selector.apply)
 }
 
 trait PDFRoutes extends Directives with JsonSupport {
@@ -91,6 +95,31 @@ trait PDFRoutes extends Directives with JsonSupport {
           case Success(highlight) => complete(highlight)
           case Failure(exception) => complete(s"Failed to parse pdf: $exception")
         }
+      }
+    }
+  }
+
+  val highlightRoute2 = (path("select2") & extractLog) { log =>
+    entity(as[Multipart.FormData]) { formData =>
+      val extractOperation = for {
+        pdfStream <- formDataToInputStream(formData, "pdf-file")
+        configStream <- formDataToInputStream(formData, "config-file")
+      } yield {
+        val config = Source.fromInputStream(configStream).mkString
+        val selector = config.parseJson.convertTo[Selector]
+        log.info(s"Extracting section from PDF with $selector")
+        val pdfSelectorStripper = PDFSelectorStripper(selector)
+        pdfSelectorStripper.setSortByPosition(true)
+
+        val pdfDocument = PDDocument.load(pdfStream)
+        val highlight = pdfSelectorStripper.getTextBySelector(pdfDocument)
+        pdfDocument.close()
+        highlight
+      }
+
+      onComplete(extractOperation) {
+        case Success(highlight) => complete(highlight)
+        case Failure(exception) => complete(s"Failed to parse pdf: $exception")
       }
     }
   }

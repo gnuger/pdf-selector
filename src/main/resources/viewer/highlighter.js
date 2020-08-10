@@ -1,7 +1,7 @@
 var scale = 1.5;
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = './node_modules/pdfjs-dist/build/pdf.worker.js';
-document.getElementById('file').onchange = function (event) {
+document.getElementById('pdf-file').onchange = function (event) {
   var file = event.target.files[0];
   var fileReader = new FileReader();
   fileReader.onload = function () {
@@ -54,10 +54,10 @@ document.getElementById('file').onchange = function (event) {
   fileReader.readAsArrayBuffer(file);
 }
 
-document.getElementById('mark').onsubmit = function(e) {
+document.getElementById('highlight').onsubmit = function(e) {
   console.log("submitted form")
 
-  var formEl = document.forms.mark
+  var formEl = document.forms.highlight
 
   var formData = new FormData(formEl);
 
@@ -67,7 +67,7 @@ document.getElementById('mark').onsubmit = function(e) {
     body: formData,
   };
 
-  fetch(`/select?start=${formData.get("start")}&end=${formData.get("end")}`, options)
+  fetch('/select2', options)
   .then(res => res.json())
   .then(response => {
     console.log('Success:', response.text)
@@ -84,15 +84,6 @@ document.getElementById('mark').onsubmit = function(e) {
     var position = response.positions[0]
     annotationLayer.appendChild(rectangleElement(position.boundingRect, 'yellow'));
     position.rects.forEach(rect => annotationLayer.appendChild(rectangleElement(rect, 'cyan')))
-
-    var config = {'start' : formData.get("start"), 'end' : formData.get("end")}
-    var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
-
-    var dlLink = document.createElement("a")
-    dlLink.href = `data:${data}`
-    dlLink.download = "config.json"
-    dlLink.appendChild(document.createTextNode("Download Selector Config"))
-    document.getElementById('download').appendChild(dlLink)
    })
   .catch(error => console.error('Error:', error));
 
